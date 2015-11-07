@@ -3,7 +3,21 @@
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_login">Login</string>
 
-    <string name="username">UserName</string>
-    <string name="password">Password</string>
+    <string name="username">username@xyz.com</string>
+    <string name="password">password</string>
     <string name="login">Login</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="signup">Sign Up</string>
+    <string name="forgot">Forgot Password</string>
+
+    <string name="firstname">First Name</string>
+    <string name="lastname">Last Name</string>
+    <string name="email">Email Address</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="submit">Submit</string>
+
+
+    <string name="openDrawer">Open the drawer</string>
+    <string name="closeDrawer">Close the drawer</string>
+    <string name="title_activity_sign_up">SignUpActivity</string>
 </resources>

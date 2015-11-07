@@ -3,4 +3,14 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+
+
+    <dimen name="no_account_marginTop">10dp</dimen>
+    <dimen name="signup_marginTop">7dp</dimen>
+    <dimen name="forgot_password_marginTop">20dp</dimen>
+
+
+    <dimen name="app_heading_size">15sp</dimen>
+    <dimen name="no_account_size">8sp</dimen>
+    <dimen name="forgot_password_size">15sp</dimen>
 </resources>

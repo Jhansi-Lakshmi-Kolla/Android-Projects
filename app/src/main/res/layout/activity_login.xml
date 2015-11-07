@@ -8,8 +8,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".LoginActivity" >
 
+    <TextView
+        android:id="@+id/title_login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="@dimen/app_heading_size"
+        android:gravity="center"/>
+
     <EditText
         android:id="@+id/username"
+        android:layout_below="@id/title_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/username"/>
@@ -25,39 +34,37 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/login"/>
+    <TextView
+        android:id="@+id/noaccount"
+        android:layout_below="@id/loginButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_account"
+        android:layout_marginTop="@dimen/no_account_marginTop"
+        android:gravity="center"
+        android:autoLink="all"/>
+    <TextView
+        android:id="@+id/signup"
+        android:layout_below="@id/noaccount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/signup"
+        android:textSize="@dimen/forgot_password_size"
+        android:gravity="center"
+        android:layout_marginTop="@dimen/no_account_marginTop"
+        android:autoLink="phone"/>
+    <TextView
+        android:id="@+id/forgotPassword"
+        android:layout_below="@id/signup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/forgot"
+        android:textSize="@dimen/forgot_password_size"
+        android:gravity="center"
+        android:layout_marginTop="@dimen/forgot_password_marginTop"
+        android:autoLink="web"/>
+
 
 </RelativeLayout>
 
-    <!--<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        tools:context="com.osu.way2go.LoginActivity">
-
-        <android.support.design.widget.AppBarLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:theme="@style/AppTheme.AppBarOverlay">
-
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-        </android.support.design.widget.AppBarLayout>
-
-        <include layout="@layout/content_login" />
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:src="@android:drawable/ic_dialog_email" />
-
-    </android.support.design.widget.CoordinatorLayout>-->
+    
