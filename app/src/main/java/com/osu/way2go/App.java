@@ -11,6 +11,6 @@ public class App extends Application {
     @Override public void onCreate() {
         super.onCreate();
 
-        Parse.initialize(this, "XXXXX", "XXXXX"); // Your Application ID and Client Key are defined elsewhere
+        Parse.initialize(this, "vf4GA2XhHHGXPFiUui7DtLehlReMLYb1TDhwJEHz", "do5SJemdcJcfdtAeOZKaP0W3jG2It2b9IsmFiEft"); // Your Application ID and Client Key are defined elsewhere
     }
 }
