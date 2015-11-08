@@ -41,7 +41,7 @@ public class SignUpActivity extends AppCompatActivity {
                 String emailID = emailBox.getText().toString();
                 String password = passwordBox.getText().toString();
                 String confirmPassword = confirmPasswordBox.getText().toString();
-                if(isPasswordGood(password, confirmPassword){
+                if(isPasswordGood(password, confirmPassword)){
 
                 }
             }
