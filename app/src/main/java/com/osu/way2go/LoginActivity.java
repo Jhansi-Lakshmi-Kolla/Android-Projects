@@ -43,6 +43,11 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ParseUser currentUser = ParseUser.getCurrentUser();
+                if (currentUser != null) {
+                    // do stuff with the user
+                    ParseUser.logOut();
+                }
                 String userNameEntered = usernameBox.getText().toString();
                 String passwordEntered = passwordBox.getText().toString();
                 ParseUser.logInInBackground(userNameEntered, passwordEntered, new LogInCallback() {

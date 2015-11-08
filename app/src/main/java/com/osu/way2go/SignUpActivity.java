@@ -42,6 +42,11 @@ public class SignUpActivity extends AppCompatActivity {
         submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ParseUser currentUser = ParseUser.getCurrentUser();
+                if (currentUser != null) {
+                    // do stuff with the user
+                    ParseUser.logOut();
+                }
                 String firstname = firstnameBox.getText().toString();
                 String lastname = lastnameBox.getText().toString();
                 String emailID = emailBox.getText().toString();
@@ -66,16 +71,8 @@ public class SignUpActivity extends AppCompatActivity {
                             {Log.i(TAG, "Not put in parse");}
                         }
 
-//                        public void done(ParseException e) {
-//                            if(e==null)
-//                            {Log.i(TAG, "Sexy");}
-//                            else
-//                            {Log.i(TAG, "Not Sexy");}
-//
-//                        }
-
                     });
-
+                    closeActivity();
                 }
             }
         });
@@ -101,6 +98,10 @@ public class SignUpActivity extends AppCompatActivity {
             alertDialog.show();
             return false;
         }
+    }
+
+    public void closeActivity(){
+        this.finish();
     }
 
 }
