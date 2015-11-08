@@ -53,7 +53,7 @@ public class SignUpActivity extends AppCompatActivity {
                     ParseUser user = new ParseUser();
                     user.setUsername(emailID);
                     user.setPassword(password);
-                    user.setEmail("emailID");
+                    user.setEmail(emailID);
 
                     // other fields can be set just like with ParseObject
                     user.put("FName", firstname);
