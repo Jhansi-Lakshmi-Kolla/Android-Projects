@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -19,7 +20,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.osu.way2go.db.MySQLiteDBUtility;
+
+import java.io.IOException;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
@@ -31,6 +35,13 @@ public class LoginActivity extends AppCompatActivity {
     Button loginButton;
     TextView signUp;
     TextView forgotPassword;
+
+    Button getRegIDButton;
+    TextView regIDTV;
+
+    GoogleCloudMessaging gcm;
+    String regid;
+    String PROJECT_NUMBER = "631056255308";
 
     MySQLiteDBUtility mDBUtility;
 
@@ -44,6 +55,16 @@ public class LoginActivity extends AppCompatActivity {
 
         usernameBox = (EditText) findViewById(R.id.username);
         passwordBox = (EditText) findViewById(R.id.password);
+
+        getRegIDButton = (Button) findViewById(R.id.getRegID);
+        getRegIDButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getRegId();
+            }
+        });
+
+        regIDTV = (TextView) findViewById(R.id.regID);
 
         loginButton = (Button) findViewById(R.id.loginButton);
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -87,6 +108,33 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    public void getRegId(){
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                String msg = "";
+                try {
+                    if (gcm == null) {
+                        gcm = GoogleCloudMessaging.getInstance(getApplicationContext());
+                    }
+                    regid = gcm.register(PROJECT_NUMBER);
+                    msg = "Device registered, registration ID=" + regid;
+                    Log.i("GCM",  msg);
+
+                } catch (IOException ex) {
+                    msg = "Error :" + ex.getMessage();
+
+                }
+                return msg;
+            }
+
+            @Override
+            protected void onPostExecute(String msg) {
+                regIDTV.setText(msg + "\n");
+            }
+        }.execute(null, null, null);
     }
 
     @Override
