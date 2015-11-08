@@ -24,6 +24,7 @@ public class SignUpActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
+        mContext = this;
         mDbUtility = new MySQLiteDBUtility(mContext);
 
         final EditText firstnameBox = (EditText) findViewById(R.id.firstnamebox);
@@ -42,7 +43,7 @@ public class SignUpActivity extends AppCompatActivity {
                 String password = passwordBox.getText().toString();
                 String confirmPassword = confirmPasswordBox.getText().toString();
                 if(isPasswordGood(password, confirmPassword)){
-
+                    registerUser(firstname, lastname,emailID,password);
                 }
             }
         });

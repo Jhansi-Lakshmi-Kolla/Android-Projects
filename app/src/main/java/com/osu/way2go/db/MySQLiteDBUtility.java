@@ -5,11 +5,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 /**
  * Created by jhansi_lak on 11/7/2015.
  */
 public class MySQLiteDBUtility {
+
+    private static final String TAG = "MySQLiteDBUtility";
 
    // private SQLiteDatabase db;
     private Context mContext;
@@ -45,7 +48,14 @@ public class MySQLiteDBUtility {
     }
 
     public boolean hasUser(String username, String tableName){
+        if(mDbHelper == null){
+            Log.i(TAG,"mDbHelper is null");
+            return false;
+        }
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        if(db == null){
+            Log.i(TAG,"GetReadable database returned null");
+        }
         String[] projection = {
                 MySQLiteContract.UserEntry._ID,
                 MySQLiteContract.UserEntry.COLUMN_USERNAME,
