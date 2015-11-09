@@ -49,7 +49,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int CUR_STATE = DEFAULT_STATE;
 
     //Navigation drawer contents
-    String TITLES[] = {"Home","Friends","Connected","Blocked","Settings"};
+    String TITLES[] = {"Invite Friends","Friends","Connected","Blocked","Settings"};
     int ICONS[] = {android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star};
     private String NAME = "Jhansi Lakshmi";
     private String EMAIL = "jhansilakshmikolla@gmail.com";
@@ -87,7 +87,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mRecyclerView = (RecyclerView) findViewById(R.id.RecyclerView);
         mRecyclerView.setHasFixedSize(true);
-        mAdapter = new MyAdapter(TITLES,ICONS,NAME,EMAIL,PROFILE);
+        mAdapter = new MyAdapter(TITLES,ICONS,NAME,EMAIL,PROFILE, this);
 
         mRecyclerView.setAdapter(mAdapter);
         mLayoutManager = new LinearLayoutManager(this);

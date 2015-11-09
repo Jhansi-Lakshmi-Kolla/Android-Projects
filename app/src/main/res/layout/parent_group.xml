@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:paddingLeft="12dp"
         android:paddingTop="4dp"
-        android:layout_toRightOf="@id/rowIcon"
+        android:layout_alignRight="@id/rowIcon"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Medium Text"
         android:id="@+id/rowText" />
@@ -32,12 +32,5 @@
         android:layout_alignParentRight="true"
         android:paddingLeft="16dp"
         android:src="@drawable/ic_media_play"/>
-
-    <ExpandableListView
-        android:id="@+id/exapndableList"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    </ExpandableListView>
 
 </RelativeLayout>

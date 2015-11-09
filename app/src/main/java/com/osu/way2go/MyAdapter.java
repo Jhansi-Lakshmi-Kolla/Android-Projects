@@ -5,6 +5,7 @@ package com.osu.way2go;
  */
 
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+
+    Context mContext;
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
@@ -40,9 +43,6 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         public ViewHolder(View itemView, int ViewType) {
             super(itemView);
-
-
-
             if (ViewType == TYPE_ITEM) {
                 textView = (TextView) itemView.findViewById(R.id.rowText);
                 imageView = (ImageView) itemView.findViewById(R.id.rowIcon);
@@ -61,7 +61,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     }
 
 
-    MyAdapter(String Titles[], int Icons[], String Name, String Email, int Profile) {
+    MyAdapter(String Titles[], int Icons[], String Name, String Email, int Profile, Context context) {
+        mContext = context;
 
         mNavTitles = Titles;
         mIcons = Icons;
@@ -98,12 +99,21 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         if (holder.Holderid == 1) {
             holder.textView.setText(mNavTitles[position - 1]);
             holder.imageView.setImageResource(mIcons[position - 1]);
+
+            holder.textView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(mContext, "clicked", Toast.LENGTH_SHORT).show();
+                }
+            });
         } else {
 
             holder.profile.setImageResource(profile);
             holder.Name.setText(name);
             holder.email.setText(email);
         }
+
+
     }
 
 
