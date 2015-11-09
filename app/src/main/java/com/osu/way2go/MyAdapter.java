@@ -5,14 +5,19 @@ package com.osu.way2go;
  */
 
 
+import android.app.Dialog;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
@@ -103,7 +108,40 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             holder.textView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(mContext, "clicked", Toast.LENGTH_SHORT).show();
+                    if(((TextView)v).getText().toString().equals("Invite Friends")){
+                        Toast.makeText(mContext, "inviting friends", Toast.LENGTH_SHORT).show();
+
+                        final Dialog addFriendsDialog = new Dialog((mContext));
+                        addFriendsDialog.setContentView(R.layout.add_friends_layout);
+                        addFriendsDialog.setTitle("Select Friends");
+                        ListView addFriendsList = (ListView) addFriendsDialog.findViewById(R.id.addFriends);
+                        ArrayList<String> friends = new ArrayList<String>();
+                        friends.add("friend 1");
+                        friends.add(("friend 2"));
+                        FriendsListDialogAdapter addFriendsAdapter = new FriendsListDialogAdapter(friends, mContext);
+                        addFriendsList.setAdapter(addFriendsAdapter);
+                        Button inviteAll = (Button) addFriendsDialog.findViewById(R.id.inviteAll);
+                        Button invite = (Button) addFriendsDialog.findViewById(R.id.invite);
+
+                        inviteAll.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //invite everyone
+                                addFriendsDialog.dismiss();
+                            }
+                        });
+
+                        invite.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //invite selected ones
+                                addFriendsDialog.dismiss();
+                            }
+                        });
+
+                        addFriendsDialog.show();
+                    }
+
                 }
             });
         } else {
