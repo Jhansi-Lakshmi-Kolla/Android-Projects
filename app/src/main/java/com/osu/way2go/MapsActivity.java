@@ -29,6 +29,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.osu.way2go.com.osu.way2go.utilities.HttpConnection;
 import com.osu.way2go.com.osu.way2go.utilities.PathJSONParser;
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseQuery;
+import com.parse.ParseUser;
 
 import org.json.JSONObject;
 
@@ -40,6 +44,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final String TAG = "MapsActivity";
 
+    //Parse details
+    ParseUser currentUser;
+
 
     //Constants
     private static final int DEFAULT_STATE = 0;
@@ -49,10 +56,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int CUR_STATE = DEFAULT_STATE;
 
     //Navigation drawer contents
-    String TITLES[] = {"Invite Friends","Friends","Connected","Blocked","Settings"};
+    String TITLES[] = {"Invite Friends","Invites","Connected","Blocked","Settings"};
     int ICONS[] = {android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star};
-    private String NAME = "Jhansi Lakshmi";
-    private String EMAIL = "jhansilakshmikolla@gmail.com";
+    private String NAME;
+    private String EMAIL;
     int PROFILE = R.drawable.jhansi;
 
     //Path direct contents
@@ -76,6 +83,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        currentUser = ParseUser.getCurrentUser();
+        NAME = getUserName();
+        EMAIL = getUserEmail();
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -314,5 +325,85 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    public String getUserName(){
+        return currentUser.get("FName").toString()+ " " + currentUser.get("LName").toString();
+    }
+
+    public String getUserEmail(){
+        return currentUser.getEmail();
+    }
+
+    public List<String> getInvites(){
+        List<String> friends = currentUser.getList("Invites");
+        return friends;
+    }
+
+    public List<String> getallUsers() throws ParseException {
+        final List<String> allusers = new ArrayList<>();
+        ParseQuery<ParseUser> query = ParseUser.getQuery();
+        List<ParseUser> r = query.find();
+
+        //query.whereEqualTo("gender", "female");
+//        query.findInBackground(new FindCallback<ParseUser>() {
+//
+//            @Override
+//            public void done(List<ParseUser> objects, com.parse.ParseException e) {
+//                if (e == null) {
+//                    for(ParseUser p : objects)
+//                    {
+//                        if(!currentUser.getUsername().equals(p.getUsername()))
+//                        {
+//                            Log.i(TAG, "adding inside getAllusers " + p.getUsername());
+//                            allusers.add(p.getUsername());
+//                        }
+//                    }
+//                    return allusers;
+//
+//                } else {
+//                    Log.i(TAG, "exception from parse");
+//                }
+//            }
+//
+//        });
+        for (ParseUser s : r){
+            Log.i(TAG, "allusers contains " + s.getUsername());
+            allusers.add(s.getUsername());
+        }
+        return allusers;
+    }
+
+    public List<String> getConnectedList(){
+        List<String> friends = currentUser.getList("Friends");
+        return friends;
+    }
+
+    public List<String> getBlockedList(){
+        List<String> blocked = currentUser.getList("Blocked");
+        return blocked;
+    }
+    public List<String> getDirectedList(){
+        return null;
+    }
+
+    public void putIvites(List<String> invites){
+        ParseQuery<ParseUser> query = ParseUser.getQuery();
+
+
+        for(String user : invites){
+            query.whereEqualTo("username",user);
+            try {
+                List<ParseUser> results = query.find();
+                for(ParseUser p : results){
+                    Log.i(TAG, "putting invites in " + p.getUsername());
+                    p.add("Invites", user);
+                    p.saveInBackground();
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
 }
+

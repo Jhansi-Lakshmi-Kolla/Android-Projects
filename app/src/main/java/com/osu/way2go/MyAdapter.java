@@ -8,20 +8,27 @@ package com.osu.way2go;
 import android.app.Dialog;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.parse.ParseException;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-
+    private static  final String TAG = "MyAdapter";
     Context mContext;
+    MapsActivity mapsActivity;
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
@@ -41,6 +48,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         TextView textView;
         ImageView imageView;
+        ListView hiddenList;
         ImageView profile;
         TextView Name;
         TextView email;
@@ -51,6 +59,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             if (ViewType == TYPE_ITEM) {
                 textView = (TextView) itemView.findViewById(R.id.rowText);
                 imageView = (ImageView) itemView.findViewById(R.id.rowIcon);
+                hiddenList = (ListView) itemView.findViewById(R.id.expandableList);
                 Holderid = 1;
             } else {
 
@@ -68,7 +77,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     MyAdapter(String Titles[], int Icons[], String Name, String Email, int Profile, Context context) {
         mContext = context;
-
+        mapsActivity = (MapsActivity) context;
         mNavTitles = Titles;
         mIcons = Icons;
         name = Name;
@@ -100,7 +109,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
 
     @Override
-    public void onBindViewHolder(MyAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(final MyAdapter.ViewHolder holder, int position) {
         if (holder.Holderid == 1) {
             holder.textView.setText(mNavTitles[position - 1]);
             holder.imageView.setImageResource(mIcons[position - 1]);
@@ -115,11 +124,31 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                         addFriendsDialog.setContentView(R.layout.add_friends_layout);
                         addFriendsDialog.setTitle("Select Friends");
                         ListView addFriendsList = (ListView) addFriendsDialog.findViewById(R.id.addFriends);
-                        ArrayList<String> friends = new ArrayList<String>();
-                        friends.add("friend 1");
-                        friends.add(("friend 2"));
-                        FriendsListDialogAdapter addFriendsAdapter = new FriendsListDialogAdapter(friends, mContext);
+                        List<String> allUsers = null;
+                        try {
+                            allUsers = mapsActivity.getallUsers();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                        /*List<String> allUsers = new ArrayList<String>();
+                        //friends.addAll(mapsActivity.getallUsers());
+                        try {
+                            for(String s : mapsActivity.getallUsers()){
+                                Log.i(TAG, "adding " + s);
+                                allUsers.add(s);
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }*/
+                        final FriendsListDialogAdapter addFriendsAdapter = new FriendsListDialogAdapter(allUsers, mContext);
                         addFriendsList.setAdapter(addFriendsAdapter);
+
+                        addFriendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                            }
+                        });
                         Button inviteAll = (Button) addFriendsDialog.findViewById(R.id.inviteAll);
                         Button invite = (Button) addFriendsDialog.findViewById(R.id.invite);
 
@@ -128,6 +157,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                             public void onClick(View v) {
                                 //invite everyone
                                 addFriendsDialog.dismiss();
+
+
                             }
                         });
 
@@ -135,11 +166,54 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                             @Override
                             public void onClick(View v) {
                                 //invite selected ones
+                                mapsActivity.putIvites(addFriendsAdapter.getSelectedFriendsList());
+                                for(String s: addFriendsAdapter.getSelectedFriendsList()){
+                                    Log.i(TAG, "selected friend : " + s);
+
+                                }
                                 addFriendsDialog.dismiss();
                             }
                         });
 
                         addFriendsDialog.show();
+                    }else if(((TextView)v).getText().toString().equals("Invites")){
+                        List<String> invites = mapsActivity.getInvites();
+                        Log.i(TAG, "Clicked on invites. showing listview");
+                        if(invites != null && !invites.isEmpty()){
+                            final ArrayAdapter adapter = new ArrayAdapter(mContext,
+                                    android.R.layout.simple_list_item_1, invites);
+                            holder.hiddenList.setAdapter(adapter);
+                        }
+
+
+                    }else if(((TextView)v).getText().toString().equals("Connected")){
+                        List<String> connectedList = mapsActivity.getConnectedList();
+                        Log.i(TAG, "Clicked on invites. showing listview");
+                        if(connectedList!= null && !connectedList.isEmpty()){
+                            for(String s: connectedList){
+                                Log.i(TAG, "connected has " + s);
+                            }
+                            final ArrayAdapter adapter = new ArrayAdapter(mContext,
+                                    android.R.layout.simple_list_item_1, connectedList);
+                            holder.hiddenList.setAdapter(adapter);
+                        }
+                    }else if(((TextView)v).getText().toString().equals("Blocked")){
+                        List<String> blockedList = mapsActivity.getBlockedList();
+                        Log.i(TAG, "Clicked on invites. showing listview");
+                        if(blockedList!= null && !blockedList.isEmpty()){
+                            for(String s: blockedList){
+                                Log.i(TAG, "blocked has " + s);
+                            }
+                            final ArrayAdapter adapter = new ArrayAdapter(mContext,
+                                    android.R.layout.simple_list_item_1, blockedList);
+                            holder.hiddenList.setAdapter(adapter);
+                        }
+                    }
+
+                    if(holder.hiddenList.getVisibility() == View.INVISIBLE){
+                        holder.hiddenList.setVisibility(View.VISIBLE);
+                    }else if(holder.hiddenList.getVisibility() == View.VISIBLE){
+                        holder.hiddenList.setVisibility(View.INVISIBLE);
                     }
 
                 }

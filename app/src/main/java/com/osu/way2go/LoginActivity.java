@@ -19,8 +19,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import com.osu.way2go.db.MySQLiteDBUtility;
+import com.parse.FindCallback;
 import com.parse.LogInCallback;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
+
+import java.util.List;
+
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     Context mContext;
@@ -56,6 +61,37 @@ public class LoginActivity extends AppCompatActivity {
                         if (user != null) {
                             // Hooray! The user is logged in.
                             Log.i(TAG, "Logged in");
+                            final ParseUser currentUser = ParseUser.getCurrentUser();
+                            if (currentUser != null) {
+                                // do stuff with the user
+                                Log.i(TAG, "Friends");
+                                List<String> f = currentUser.getList("Friends");
+                                for(String model : f) {
+                                    Log.i(TAG, model);
+                                }
+                                Log.i(TAG, "Users");
+                                ParseQuery<ParseUser> query = ParseUser.getQuery();
+                                //query.whereEqualTo("gender", "female");
+                                query.findInBackground(new FindCallback<ParseUser>() {
+                                    @Override
+                                    public void done(List<ParseUser> objects, com.parse.ParseException e) {
+                                        if (e == null) {
+                                            for(ParseUser p : objects)
+                                            {
+                                                //Log.i(TAG, currentUser.getUsername());
+                                                if(!currentUser.getUsername().equals(p.getUsername()))
+                                                {Log.i(TAG, p.getUsername());}
+                                            }
+                                        } else {
+                                            // Something went wrong.
+                                        }
+                                    }
+                                });
+
+                            } else {
+                                Log.i(TAG, "failed");
+                            }
+
                             Intent mapIntent = new Intent(mContext, MapsActivity.class);
                             startActivity(mapIntent);
                         } else {
