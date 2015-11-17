@@ -65,18 +65,18 @@
         android:layout_marginTop="@dimen/forgot_password_marginTop"
         android:autoLink="web"/>
 
-    <Button
+   <!-- <Button
         android:id="@+id/getRegID"
         android:layout_below="@id/forgotPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Get RegID"/>
+        android:text="Get RegID"/>-->
 
-    <TextView
+   <!-- <TextView
         android:id="@+id/regID"
         android:layout_below="@id/getRegID"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"/>-->
 
 
 </RelativeLayout>

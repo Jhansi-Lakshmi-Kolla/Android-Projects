@@ -7,11 +7,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -29,8 +26,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.osu.way2go.com.osu.way2go.utilities.HttpConnection;
 import com.osu.way2go.com.osu.way2go.utilities.PathJSONParser;
-import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -333,15 +330,43 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return currentUser.getEmail();
     }
 
-    public List<String> getInvites(){
-        List<String> friends = currentUser.getList("Invites");
-        return friends;
+    public List<String> getInvites() throws ParseException {
+        List<Object> invites = new ArrayList<>();
+        List<String> invitesNames = new ArrayList<>();
+        ParseQuery<ParseObject> q = ParseQuery.getQuery("Invite");
+        q.whereEqualTo("Username", currentUser.getUsername());
+        List<ParseObject> li = q.find();
+        //invites.addAll(li.get(0).getString("Invites"));
+        for(ParseObject o : li){
+            invites.addAll(o.getList("Invites"));
+        }
+
+
+        for(Object oo : invites)
+            invitesNames.add(oo.toString());
+        return invitesNames;
     }
 
     public List<String> getallUsers() throws ParseException {
         final List<String> allusers = new ArrayList<>();
         ParseQuery<ParseUser> query = ParseUser.getQuery();
         List<ParseUser> r = query.find();
+        //query.whereNotEqualTo("username", ParseUser.getCurrentUser().getUsername());
+        for(ParseUser p : r)
+        {
+            if(!currentUser.getUsername().equals(p.getUsername()))
+            {
+                Log.i(TAG, "adding inside getAllusers " + p.getUsername());
+                allusers.add(p.getUsername());
+            }
+        }
+
+
+//        for (ParseUser s : r){
+//            Log.i(TAG, "allusers contains " + s.getUsername());
+//            allusers.add(s.getUsername());
+//        }
+        return allusers;
 
         //query.whereEqualTo("gender", "female");
 //        query.findInBackground(new FindCallback<ParseUser>() {
@@ -365,11 +390,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //            }
 //
 //        });
-        for (ParseUser s : r){
-            Log.i(TAG, "allusers contains " + s.getUsername());
-            allusers.add(s.getUsername());
-        }
-        return allusers;
+
     }
 
     public List<String> getConnectedList(){
@@ -385,22 +406,64 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return null;
     }
 
-    public void putIvites(List<String> invites){
-        ParseQuery<ParseUser> query = ParseUser.getQuery();
+    public void putInvites(List<String> invites){
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Invite");
 
 
         for(String user : invites){
-            query.whereEqualTo("username",user);
+            query.whereEqualTo("Username",user);
             try {
-                List<ParseUser> results = query.find();
-                for(ParseUser p : results){
-                    Log.i(TAG, "putting invites in " + p.getUsername());
-                    p.add("Invites", user);
-                    p.saveInBackground();
+                List<ParseObject> results = query.find();
+                for(ParseObject p : results){
+                    Log.i(TAG, "putting invites in " + p.getString("Username"));
+                    final ParseUser u = ParseUser.getCurrentUser();
+                    p.addUnique("Invites", u.getUsername());
+                    p.save();
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void putInFriendsList(String inviter){
+        ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
+        pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
+        try {
+            List<ParseObject> results = pq.find();
+            for(ParseObject p : results){
+                Log.i(TAG, "putting invites in " + p.getString("Username"));
+                //final ParseUser u = ParseUser.getCurrentUser();
+                p.addUnique("Friends", inviter);
+                p.save();
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public void removeinInvitesList(String inviter){
+        ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
+        pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
+        try {
+            List<ParseObject> results = pq.find();
+            for(ParseObject p : results){
+                Log.i(TAG, "removing invites in " + p.getString("Username"));
+                //p.remove(inviter);
+                //p.addUnique("Friends", inviter);
+                //p.removeAll("Invites",);
+                for(Object x : p.getList("Invites"))
+                {
+
+                    if(x.toString().equals(inviter))
+                        p.remove(inviter);
+                }
+                p.save();
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
     }
 

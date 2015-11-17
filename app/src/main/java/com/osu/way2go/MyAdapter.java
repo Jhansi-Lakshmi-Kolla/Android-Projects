@@ -22,7 +22,6 @@ import android.widget.Toast;
 
 import com.parse.ParseException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
@@ -130,16 +129,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
-                        /*List<String> allUsers = new ArrayList<String>();
-                        //friends.addAll(mapsActivity.getallUsers());
-                        try {
-                            for(String s : mapsActivity.getallUsers()){
-                                Log.i(TAG, "adding " + s);
-                                allUsers.add(s);
-                            }
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }*/
+
                         final FriendsListDialogAdapter addFriendsAdapter = new FriendsListDialogAdapter(allUsers, mContext);
                         addFriendsList.setAdapter(addFriendsAdapter);
 
@@ -152,13 +142,13 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                         Button inviteAll = (Button) addFriendsDialog.findViewById(R.id.inviteAll);
                         Button invite = (Button) addFriendsDialog.findViewById(R.id.invite);
 
+                        final List<String> finalAllUsers = allUsers;
                         inviteAll.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 //invite everyone
+                                mapsActivity.putInvites(finalAllUsers);
                                 addFriendsDialog.dismiss();
-
-
                             }
                         });
 
@@ -166,7 +156,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                             @Override
                             public void onClick(View v) {
                                 //invite selected ones
-                                mapsActivity.putIvites(addFriendsAdapter.getSelectedFriendsList());
+                                mapsActivity.putInvites(addFriendsAdapter.getSelectedFriendsList());
                                 for(String s: addFriendsAdapter.getSelectedFriendsList()){
                                     Log.i(TAG, "selected friend : " + s);
 
@@ -177,11 +167,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
                         addFriendsDialog.show();
                     }else if(((TextView)v).getText().toString().equals("Invites")){
-                        List<String> invites = mapsActivity.getInvites();
+                        List<String> invites = null;
+                        try {
+                            invites = mapsActivity.getInvites();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                         Log.i(TAG, "Clicked on invites. showing listview");
                         if(invites != null && !invites.isEmpty()){
-                            final ArrayAdapter adapter = new ArrayAdapter(mContext,
-                                    android.R.layout.simple_list_item_1, invites);
+                            InvitesAdapter adapter = new InvitesAdapter(mContext, mapsActivity,invites);
                             holder.hiddenList.setAdapter(adapter);
                         }
 
