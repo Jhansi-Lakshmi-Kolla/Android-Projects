@@ -23,14 +23,18 @@ public class FriendsListDialogAdapter extends BaseAdapter {
     LayoutInflater inflater;
     Context mContext;
 
+    int selectCount;
+    String selectedFriend;
+
     TextView friend;
     CheckBox selectFriend;
 
-    public FriendsListDialogAdapter(List<String> friends, Context context){
+    public FriendsListDialogAdapter(List<String> friends, Context context, int selectCount){
         friendsList = friends;
         inflater = LayoutInflater.from(context);
         mContext = context;
         selectedFriendsList = new ArrayList<>();
+        this.selectCount = selectCount;
     }
     @Override
     public int getCount() {
@@ -59,10 +63,11 @@ public class FriendsListDialogAdapter extends BaseAdapter {
             friend.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-                    String s = friend.getText().toString();
                     Log.i(TAG, "adding " + a);
-                    selectedFriendsList.add(a);
+                    if(selectCount != 1)
+                        selectedFriendsList.add(a);
+                    else
+                        selectedFriend = a;
                 }
             });
 
@@ -97,6 +102,10 @@ public class FriendsListDialogAdapter extends BaseAdapter {
             Log.i(TAG, "empty selected list");
         }
         return this.selectedFriendsList;
+    }
+
+    public String getSelectedFriend(){
+        return this.selectedFriend;
     }
 
     public void onCheckBoxClicked(View v){

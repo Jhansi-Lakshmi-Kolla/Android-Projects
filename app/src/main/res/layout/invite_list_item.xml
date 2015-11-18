@@ -12,11 +12,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
+        android:layout_margin="6dp"
         android:src="@drawable/yes"/>
     <ImageView
         android:id="@+id/no"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="6dp"
         android:layout_toLeftOf="@id/yes"
         android:src="@drawable/no"/>
 

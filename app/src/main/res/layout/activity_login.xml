@@ -65,18 +65,18 @@
         android:layout_marginTop="@dimen/forgot_password_marginTop"
         android:autoLink="web"/>
 
-   <!-- <Button
-        android:id="@+id/getRegID"
+    <Button
+        android:id="@+id/connect"
         android:layout_below="@id/forgotPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Get RegID"/>-->
+        android:text="Connect to server"/>
 
-   <!-- <TextView
-        android:id="@+id/regID"
-        android:layout_below="@id/getRegID"
+    <TextView
+        android:id="@+id/serverContent"
+        android:layout_below="@id/connect"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>-->
+        android:layout_height="wrap_content"/>
 
 
 </RelativeLayout>

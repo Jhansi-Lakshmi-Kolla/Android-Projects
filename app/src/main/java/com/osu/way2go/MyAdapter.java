@@ -130,7 +130,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                             e.printStackTrace();
                         }
 
-                        final FriendsListDialogAdapter addFriendsAdapter = new FriendsListDialogAdapter(allUsers, mContext);
+                        final FriendsListDialogAdapter addFriendsAdapter = new FriendsListDialogAdapter(allUsers, mContext, 0);
                         addFriendsList.setAdapter(addFriendsAdapter);
 
                         addFriendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -170,6 +170,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                         List<String> invites = null;
                         try {
                             invites = mapsActivity.getInvites();
+                            for(String s : invites){
+                                Log.i(TAG, "in invites " + s);
+                            }
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -181,33 +184,41 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
 
                     }else if(((TextView)v).getText().toString().equals("Connected")){
-                        List<String> connectedList = mapsActivity.getConnectedList();
-                        Log.i(TAG, "Clicked on invites. showing listview");
-                        if(connectedList!= null && !connectedList.isEmpty()){
-                            for(String s: connectedList){
-                                Log.i(TAG, "connected has " + s);
+                        List<String> connected = null;
+                        try {
+                            connected = mapsActivity.getConnectedList();
+                            for(String s : connected){
+                                Log.i(TAG, "in invites " + s);
                             }
-                            final ArrayAdapter adapter = new ArrayAdapter(mContext,
-                                    android.R.layout.simple_list_item_1, connectedList);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                        Log.i(TAG, "Clicked on invites. showing listview");
+                        if(connected != null && !connected.isEmpty()){
+                            InvitesAdapter adapter = new InvitesAdapter(mContext, mapsActivity,connected);
                             holder.hiddenList.setAdapter(adapter);
                         }
                     }else if(((TextView)v).getText().toString().equals("Blocked")){
-                        List<String> blockedList = mapsActivity.getBlockedList();
-                        Log.i(TAG, "Clicked on invites. showing listview");
-                        if(blockedList!= null && !blockedList.isEmpty()){
-                            for(String s: blockedList){
-                                Log.i(TAG, "blocked has " + s);
+                        List<String> blocked = null;
+                        try {
+                            blocked = mapsActivity.getConnectedList();
+                            for(String s : blocked){
+                                Log.i(TAG, "in invites " + s);
                             }
-                            final ArrayAdapter adapter = new ArrayAdapter(mContext,
-                                    android.R.layout.simple_list_item_1, blockedList);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                        Log.i(TAG, "Clicked on invites. showing listview");
+                        if(blocked != null && !blocked.isEmpty()){
+                            InvitesAdapter adapter = new InvitesAdapter(mContext, mapsActivity,blocked);
                             holder.hiddenList.setAdapter(adapter);
                         }
                     }
 
-                    if(holder.hiddenList.getVisibility() == View.INVISIBLE){
+                    if(holder.hiddenList.getVisibility() == View.INVISIBLE || holder.hiddenList.getVisibility() == View.GONE){
                         holder.hiddenList.setVisibility(View.VISIBLE);
                     }else if(holder.hiddenList.getVisibility() == View.VISIBLE){
-                        holder.hiddenList.setVisibility(View.INVISIBLE);
+                        holder.hiddenList.setVisibility(View.GONE);
                     }
 
                 }

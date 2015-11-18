@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Home" />
+        <item
+            android:id="@+id/nav_invite_friends"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Invite Friends" />
+        <item
+            android:id="@+id/nav_invites"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Invites" />
+        <item
+            android:id="@+id/nav_friends"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Friends" />
+        <item
+            android:id="@+id/nav_blocked"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Blocked" />
+
+    </group>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_invite"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Invite Friends" />
+            <item
+                android:id="@+id/nav_settings"
+                android:icon="@drawable/ic_menu_manage"
+                android:title="Settings" />
+        </menu>
+    </item>
+
+</menu>
