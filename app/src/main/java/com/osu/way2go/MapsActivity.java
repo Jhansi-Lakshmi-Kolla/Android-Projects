@@ -25,6 +25,9 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -33,6 +36,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.parse.ParseException;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +49,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final String TAG = "MapsActivity";
     private Context mContext;
+    LatLng curlocation;
 
     //Parse details
 
@@ -72,7 +81,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fab;
 
-    //SocketIO mSocket;
+    Socket mSocket;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,13 +132,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         public void onLocationChanged(Location location) {
             // Called when a new location is found by the network location provider.
             Log.i(TAG, "onLocationChanged");
-            LatLng curlocation = new LatLng(location.getLatitude(), location.getLongitude());
+            curlocation = new LatLng(location.getLatitude(), location.getLongitude());
             //LatLng otherlocation = new LatLng(location.getLatitude()+100, location.getLongitude()+100);
             mMap.clear();
             mMap.addMarker(new MarkerOptions().position(curlocation).title("Marker in current location"));
             //addLines(new LatLng(40.722543, -73.998585), new LatLng(40.7577, -73.9857));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curlocation, 13));
-            sendLocation(curlocation.latitude, curlocation.longitude);
+           // sendLocation(curlocation.latitude, curlocation.longitude);
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -161,6 +170,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         String url = getMapsApiDirectionsUrl(lastPoistion, latLng);
                         ReadTask downloadTask = new ReadTask(mContext);
                         downloadTask.execute(url);
+                    }
+                    if(currentConnectedFriend != null){
+                        sendLocation(latLng.latitude, latLng.longitude);
                     }
 
                 }
@@ -332,19 +344,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             e.printStackTrace();
         }*/
 
-       /* try {
-            mSocket = new SocketIO(Constants.SERVER_URL);
+        try {
+            mSocket = IO.socket(Constants.SERVER_URL);
             mSocket.connect();
+            mSocket.emit(Constants.EVENT_REGISTER, ParseUtility.getUserEmail());
+
             mSocket.on(Constants.EVENT_RECEIVE_LOCATION, new Emitter.Listener() {
                 @Override
                 public void call(Object... args) {
+                    Log.i(TAG, "received location " + args[0]);
+                    String[] positions = String.valueOf(args[0]).split(",");
+                    double latitude = Double.valueOf(positions[0]);
+                    double longitude = Double.valueOf(positions[1]);
+                    final LatLng remotePosition = new LatLng(latitude, longitude);
                     final Object[] random = args;
                     runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
-                            Log.i(TAG, "received location " + random[0]);
                             Toast.makeText(mContext, "recieved another location ; " + random[0], Toast.LENGTH_SHORT).show();
+                            if(mMap != null){
+                                mMap.clear();
+                                mMap.addMarker(new MarkerOptions().position(remotePosition).title("Marker in remote location"));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(remotePosition, 13));
+                            }
                         }
                     });
 
@@ -354,12 +377,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mSocket.on(Constants.MESSAGE, new Emitter.Listener() {
                 @Override
                 public void call(Object... args) {
+                    Log.i(TAG, "received location " + args[0]);
                     final Object[] random = args;
                     runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
-                            Log.i(TAG, "received location " + random[0]);
+
                             Toast.makeText(mContext, "recieved message from server ; " + random[0], Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -368,7 +392,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
         } catch (URISyntaxException e) {
             e.printStackTrace();
-        }*/
+        }
 
     }
 
@@ -376,12 +400,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void sendLocation(double latitude, double longitude){
        // double[] location = {latitude, longitude};
-        String location = String.valueOf(latitude) + String.valueOf(longitude);
-        //mSocket.emit(Constants.EVENT_SEND_LOCATION,location);
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("receiver",currentConnectedFriend);
+            obj.put("latitude", latitude);
+            obj.put("longitude", longitude);
+            mSocket.emit(Constants.EVENT_SEND_LOCATION, obj);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+       /* String location = String.valueOf(latitude) +"," + String.valueOf(longitude);
+        mSocket.emit(Constants.EVENT_SEND_LOCATION,location);*/
     }
 
     public void disconnectFromServer(){
-       // mSocket.disconnect();
+       mSocket.disconnect();
     }
 
     @Override
