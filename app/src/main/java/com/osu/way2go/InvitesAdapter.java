@@ -53,15 +53,15 @@ public class InvitesAdapter extends BaseAdapter {
         yes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mapsActivity.putInFriendsList(inviter.getText().toString());
-                mapsActivity.removeinInvitesList(inviter.getText().toString());
+                ParseUtility.putInFriendsList(inviter.getText().toString());
+                ParseUtility.removeinInvitesList(inviter.getText().toString());
             }
         });
 
         no.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mapsActivity.removeinInvitesList(inviter.getText().toString());
+                ParseUtility.removeinInvitesList(inviter.getText().toString());
             }
         });
         return rootView;

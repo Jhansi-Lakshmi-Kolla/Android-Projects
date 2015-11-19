@@ -125,7 +125,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                         ListView addFriendsList = (ListView) addFriendsDialog.findViewById(R.id.addFriends);
                         List<String> allUsers = null;
                         try {
-                            allUsers = mapsActivity.getallUsers();
+                            allUsers = ParseUtility.getallUsers();
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
@@ -147,7 +147,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                             @Override
                             public void onClick(View v) {
                                 //invite everyone
-                                mapsActivity.putInvites(finalAllUsers);
+                                ParseUtility.putInvites(finalAllUsers);
                                 addFriendsDialog.dismiss();
                             }
                         });
@@ -156,7 +156,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                             @Override
                             public void onClick(View v) {
                                 //invite selected ones
-                                mapsActivity.putInvites(addFriendsAdapter.getSelectedFriendsList());
+                                ParseUtility.putInvites(addFriendsAdapter.getSelectedFriendsList());
                                 for(String s: addFriendsAdapter.getSelectedFriendsList()){
                                     Log.i(TAG, "selected friend : " + s);
 
@@ -169,7 +169,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                     }else if(((TextView)v).getText().toString().equals("Invites")){
                         List<String> invites = null;
                         try {
-                            invites = mapsActivity.getInvites();
+                            invites = ParseUtility.getInvites();
                             for(String s : invites){
                                 Log.i(TAG, "in invites " + s);
                             }
@@ -186,7 +186,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                     }else if(((TextView)v).getText().toString().equals("Connected")){
                         List<String> connected = null;
                         try {
-                            connected = mapsActivity.getConnectedList();
+                            connected = ParseUtility.getConnectedList();
                             for(String s : connected){
                                 Log.i(TAG, "in invites " + s);
                             }
@@ -201,7 +201,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
                     }else if(((TextView)v).getText().toString().equals("Blocked")){
                         List<String> blocked = null;
                         try {
-                            blocked = mapsActivity.getConnectedList();
+                            blocked = ParseUtility.getConnectedList();
                             for(String s : blocked){
                                 Log.i(TAG, "in invites " + s);
                             }

@@ -24,9 +24,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,20 +32,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.osu.way2go.com.osu.way2go.utilities.HttpConnection;
-import com.osu.way2go.com.osu.way2go.utilities.PathJSONParser;
 import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ParseUser;
-
-import org.json.JSONObject;
-
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
+
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
@@ -55,7 +43,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Context mContext;
 
     //Parse details
-    ParseUser currentUser;
 
 
     //Constants
@@ -63,7 +50,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int ADD_MARKERS_STATE = 1;
     private static final int DRAW_PATH_STATE = 2;
 
-    private String currentConnectedFriend;
+    private String currentConnectedFriend = null;
 
     private int CUR_STATE = DEFAULT_STATE;
 
@@ -85,7 +72,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fab;
 
-    Socket mSocket;
+    //SocketIO mSocket;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,9 +86,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        currentUser = ParseUser.getCurrentUser();
-        NAME = getUserName();
-        EMAIL = getUserEmail();
+
+        NAME = ParseUtility.getUserName();
+        EMAIL = ParseUtility.getUserEmail();
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -137,7 +124,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Called when a new location is found by the network location provider.
             Log.i(TAG, "onLocationChanged");
             LatLng curlocation = new LatLng(location.getLatitude(), location.getLongitude());
-            LatLng otherlocation = new LatLng(location.getLatitude()+100, location.getLongitude()+100);
+            //LatLng otherlocation = new LatLng(location.getLatitude()+100, location.getLongitude()+100);
             mMap.clear();
             mMap.addMarker(new MarkerOptions().position(curlocation).title("Marker in current location"));
             //addLines(new LatLng(40.722543, -73.998585), new LatLng(40.7577, -73.9857));
@@ -163,16 +150,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                if(CUR_STATE == ADD_MARKERS_STATE){
+                if (CUR_STATE == ADD_MARKERS_STATE) {
                     LatLng lastPoistion = null;
-                    if(pathMarkers != null && pathMarkers.size() != 0){
-                        lastPoistion = pathMarkers.get(pathMarkers.size()-1);
+                    if (pathMarkers != null && pathMarkers.size() != 0) {
+                        lastPoistion = pathMarkers.get(pathMarkers.size() - 1);
                     }
                     pathMarkers.add(latLng);
                     mMap.addMarker(new MarkerOptions().position(latLng));
-                    if(lastPoistion != null){
+                    if (lastPoistion != null) {
                         String url = getMapsApiDirectionsUrl(lastPoistion, latLng);
-                        ReadTask downloadTask = new ReadTask();
+                        ReadTask downloadTask = new ReadTask(mContext);
                         downloadTask.execute(url);
                     }
 
@@ -191,14 +178,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch (state){
             case DEFAULT_STATE:
                 showSelectfriendDialog();
+                if(currentConnectedFriend != null){
+                    receiveSelectFriendLocation(currentConnectedFriend);
+                    fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_menu_share));
+                }
+
                 CUR_STATE = ADD_MARKERS_STATE;
                 break;
-            case ADD_MARKERS_STATE:
+           /* case ADD_MARKERS_STATE:
                 CUR_STATE = DRAW_PATH_STATE;
-                break;
+                break;*/
             case DRAW_PATH_STATE:
                 pathMarkers.clear();
                 mMap.clear();
+                fab.setImageDrawable(getResources().getDrawable(android.R.drawable.ic_input_add));
+                currentConnectedFriend = null;
                 CUR_STATE = DEFAULT_STATE;
                 break;
         }
@@ -212,7 +206,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ListView addFriendsList = (ListView) selectFriendsDialog.findViewById(R.id.addFriends);
         List<String> friends = null;
         try {
-            friends = getConnectedList();
+            friends = ParseUtility.getConnectedList();
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -236,6 +230,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
        });
 
         selectFriendsDialog.show();
+    }
+
+    public void receiveSelectFriendLocation(String receiverName){
+        if(mMap != null){
+
+        }
     }
 
    /* private void addLines(List<LatLng> markers) {
@@ -279,246 +279,63 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
-    private class ReadTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... url) {
-            String data = "";
-            try {
-                HttpConnection http = new HttpConnection();
-                data = http.readUrl(url[0]);
-            } catch (Exception e) {
-                Log.d("Background Task", e.toString());
-            }
-            return data;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            if(result == null || result.length() == 0){
-                Log.e(TAG,"result from HttpConnection is null");
-            }else{
-                Log.i(TAG, "result from HttpConnection " + result);
-                new ParserTask().execute(result);
-            }
+    public void addPolyLineOptions(PolylineOptions options){
+        if(mMap != null && options != null){
+            mMap.addPolyline(options);
+        }else{
+            Log.e(TAG,"mMap is null");
         }
     }
 
-    private class ParserTask extends
-            AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
-
-        @Override
-        protected List<List<HashMap<String, String>>> doInBackground(
-                String... jsonData) {
-
-            JSONObject jObject;
-            List<List<HashMap<String, String>>> routes = null;
-
-            try {
-                jObject = new JSONObject(jsonData[0]);
-                PathJSONParser parser = new PathJSONParser();
-                Log.i(TAG,jObject.toString());
-                routes = parser.parse(jObject);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return routes;
-        }
-
-        @Override
-        protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
-            ArrayList<LatLng> points = null;
-            PolylineOptions polyLineOptions = null;
-            if(routes == null || routes.size() == 0){
-                Log.e(TAG, "routes returned from background ParserTask has no content");
-            }
-
-            // traversing through routes
-            for (int i = 0; i < routes.size(); i++) {
-                Log.i(TAG,"inside routes");
-                points = new ArrayList<LatLng>();
-                polyLineOptions = new PolylineOptions();
-                List<HashMap<String, String>> path = routes.get(i);
-
-                for (int j = 0; j < path.size(); j++) {
-                    Log.i(TAG,"inside path");
-                    HashMap<String, String> point = path.get(j);
-
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-
-                    points.add(position);
-                }
-
-                polyLineOptions.addAll(points);
-                polyLineOptions.width(4);
-                polyLineOptions.color(Color.BLUE);
-            }
-            if(mMap != null){
-                mMap.addPolyline(polyLineOptions);
-            }else{
-                Log.e(TAG,"mMap is null");
-            }
-
-        }
-    }
-
-    public String getUserName(){
-        return currentUser.get("FName").toString()+ " " + currentUser.get("LName").toString();
-    }
-
-    public String getUserEmail(){
-        return currentUser.getEmail();
-    }
-
-    public List<String> getInvites() throws ParseException {
-        List<Object> invites = new ArrayList<>();
-        List<String> invitesNames = new ArrayList<>();
-        ParseQuery<ParseObject> q = ParseQuery.getQuery("Invite");
-        q.whereEqualTo("Username", currentUser.getUsername());
-        List<ParseObject> li = q.find();
-        //invites.addAll(li.get(0).getString("Invites"));
-        for(ParseObject o : li){
-            invites.addAll(o.getList("Invites"));
-        }
 
 
-        for(Object oo : invites)
-            invitesNames.add(oo.toString());
-        return invitesNames;
-    }
 
-    public List<String> getallUsers() throws ParseException {
-        final List<String> allusers = new ArrayList<>();
-        ParseQuery<ParseUser> query = ParseUser.getQuery();
-        List<ParseUser> r = query.find();
-        //query.whereNotEqualTo("username", ParseUser.getCurrentUser().getUsername());
-        for(ParseUser p : r)
-        {
-            if(!currentUser.getUsername().equals(p.getUsername()))
-            {
-                Log.i(TAG, "adding inside getAllusers " + p.getUsername());
-                allusers.add(p.getUsername());
-            }
-        }
-        return allusers;
-    }
-
-    public List<String> getConnectedList() throws ParseException {
-        List<Object> connectedList = new ArrayList<>();
-        List<String> connectedNames = new ArrayList<>();
-        ParseQuery<ParseObject> q = ParseQuery.getQuery("Invite");
-        q.whereEqualTo("Username", currentUser.getUsername());
-        List<ParseObject> li = q.find();
-        //invites.addAll(li.get(0).getString("Invites"));
-        for(ParseObject o : li){
-            connectedList.addAll(o.getList("Friends"));
-        }
-
-
-        for(Object oo : connectedList)
-            connectedNames.add(oo.toString());
-        return connectedNames;
-    }
-
-    public List<String> getBlockedList() throws ParseException {
-        List<Object> blockedList = new ArrayList<>();
-        List<String> blockedNames = new ArrayList<>();
-        ParseQuery<ParseObject> q = ParseQuery.getQuery("Invite");
-        q.whereEqualTo("Username", currentUser.getUsername());
-        List<ParseObject> li = q.find();
-        //invites.addAll(li.get(0).getString("Invites"));
-        for(ParseObject o : li){
-            blockedList.addAll(o.getList("Blocked"));
-        }
-
-
-        for(Object oo : blockedList)
-            blockedNames.add(oo.toString());
-        return blockedNames;
-    }
-    public List<String> getDirectedList(){
-        return null;
-    }
-
-    public void putInvites(List<String> invites){
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Invite");
-
-
-        for(String user : invites){
-            query.whereEqualTo("Username",user);
-            try {
-                List<ParseObject> results = query.find();
-                for(ParseObject p : results){
-                    Log.i(TAG, "putting invites in " + p.getString("Username"));
-                    final ParseUser u = ParseUser.getCurrentUser();
-                    p.addUnique("Invites", u.getUsername());
-                    p.save();
-                }
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-    }
-
-    public void putInFriendsList(String inviter){
-        ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
-        pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
-        try {
-            List<ParseObject> results = pq.find();
-            for(ParseObject p : results){
-                Log.i(TAG, "putting invites in " + p.getString("Username"));
-                //final ParseUser u = ParseUser.getCurrentUser();
-                p.addUnique("Friends", inviter);
-                p.save();
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        ParseQuery<ParseObject> qq = ParseQuery.getQuery("Invite");
-        //qq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
-        qq.whereEqualTo("Username", inviter);
-        try {
-            List<ParseObject> results = qq.find();
-            for(ParseObject p : results){
-                Log.i(TAG, "putting invites in " + p.getString("Username"));
-                //final ParseUser u = ParseUser.getCurrentUser();
-                p.addUnique("Friends", ParseUser.getCurrentUser().getUsername());
-                p.save();
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
-    public void removeinInvitesList(String inviter){
-
-        ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
-        pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
-        try {
-            List<ParseObject> results = pq.find();
-            for(ParseObject p : results){
-                Log.i(TAG, "putting invites in " + p.getString("Username"));
-                p.removeAll("Invites", Arrays.asList(inviter));
-                p.save();
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-    }
 
     public void connectToServer(){
+        final String local_tag = "SocketIO";
+        /*try {
+            mSocket = new SocketIO(Constants.SERVER_URL);
+            mSocket.connect(new IOCallback() {
+                @Override
+                public void onDisconnect() {
 
-        try {
-            mSocket = IO.socket(Constants.SERVER_URL);
+                }
+
+                @Override
+                public void onConnect() {
+                    Log.i(local_tag, "connection established");
+                }
+
+                @Override
+                public void onMessage(String s, IOAcknowledge ioAcknowledge) {
+                    Log.i(local_tag, "onMessage : " + s);
+                }
+
+                @Override
+                public void onMessage(JSONObject jsonObject, IOAcknowledge ioAcknowledge) {
+                    Log.i(local_tag, "onMessage jsonObject : " + jsonObject);
+                }
+
+                @Override
+                public void on(String event, IOAcknowledge ioAcknowledge, Object... objects) {
+                    Log.i(local_tag, "Server triggered event : " + event);
+                }
+
+                @Override
+                public void onError(SocketIOException e) {
+                    Log.i(local_tag, "onerror");
+                }
+            });
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }*/
+
+       /* try {
+            mSocket = new SocketIO(Constants.SERVER_URL);
             mSocket.connect();
-            mSocket.on(Constants.EVENT_RECEIVE_SEND, new Emitter.Listener() {
+            mSocket.on(Constants.EVENT_RECEIVE_LOCATION, new Emitter.Listener() {
                 @Override
                 public void call(Object... args) {
                     final Object[] random = args;
@@ -533,9 +350,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 }
             });
+
+            mSocket.on(Constants.MESSAGE, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    final Object[] random = args;
+                    runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            Log.i(TAG, "received location " + random[0]);
+                            Toast.makeText(mContext, "recieved message from server ; " + random[0], Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                }
+            });
         } catch (URISyntaxException e) {
             e.printStackTrace();
-        }
+        }*/
 
     }
 
@@ -544,11 +377,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void sendLocation(double latitude, double longitude){
        // double[] location = {latitude, longitude};
         String location = String.valueOf(latitude) + String.valueOf(longitude);
-        mSocket.emit(Constants.EVENT_SEND_LOCATION,location);
+        //mSocket.emit(Constants.EVENT_SEND_LOCATION,location);
     }
 
     public void disconnectFromServer(){
-        mSocket.disconnect();
+       // mSocket.disconnect();
     }
 
     @Override

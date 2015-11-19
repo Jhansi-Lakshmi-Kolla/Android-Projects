@@ -1,6 +1,7 @@
 package com.osu.way2go;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,13 +12,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
+
 import com.osu.way2go.db.MySQLiteDBUtility;
 import com.parse.FindCallback;
 import com.parse.LogInCallback;
+import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -64,6 +65,7 @@ public class LoginActivity extends AppCompatActivity {
         forgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                forgotPassword();
             }
         });
 
@@ -168,6 +170,50 @@ public class LoginActivity extends AppCompatActivity {
 //                            });
 //                    alertDialog.show();
 //                }
+    }
+
+    public void forgotPassword(){
+        final Dialog forgotPasswordDialog = new Dialog(mContext);
+        forgotPasswordDialog.setContentView(R.layout.forgot_password_layout);
+        final EditText emailID = (EditText)forgotPasswordDialog.findViewById(R.id.forgotPasswordemail);
+        Button cancelButton = (Button) forgotPasswordDialog.findViewById(R.id.cancel_forgot);
+        Button requestButton = (Button) forgotPasswordDialog.findViewById(R.id.request_forgot);
+
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                forgotPasswordDialog.dismiss();
+            }
+        });
+
+        requestButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String emailIDEntered = emailID.getText().toString();
+                try {
+                    if(ParseUtility.isValidEmailID(emailIDEntered)){
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        i.setType("message/rfc822");
+                        i.putExtra(Intent.EXTRA_EMAIL  , new String[]{emailIDEntered});
+                        i.putExtra(Intent.EXTRA_SUBJECT, "New Password for Way2Go");
+                        i.putExtra(Intent.EXTRA_TEXT   , "Your password is "+ParseUtility.getPassword(emailIDEntered));
+                        try {
+                            //ParseUtility.updatePassword(emailIDEntered);
+                            startActivity(Intent.createChooser(i, "Send mail..."));
+                        } catch (android.content.ActivityNotFoundException ex) {
+
+                        }
+
+                    }else{
+                        Toast.makeText(LoginActivity.this, "Enter correct email ID", Toast.LENGTH_SHORT).show();
+                        //forgotPasswordDialog.dismiss();
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        forgotPasswordDialog.show();
     }
 
 
