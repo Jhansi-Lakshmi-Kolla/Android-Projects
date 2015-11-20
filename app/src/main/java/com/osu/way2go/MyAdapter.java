@@ -36,7 +36,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     private static final int TYPE_ITEM = 1;
 
     private String mNavTitles[];
-    private int mIcons[];
+    //private int mIcons[];
 
     private String name;
     private int profile;
@@ -79,11 +79,11 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     }
 
 
-    MyAdapter(String Titles[], int Icons[], String Name, String Email, int Profile, Context context) {
+    MyAdapter(String Titles[], String Name, String Email, int Profile, Context context) {
         mContext = context;
         mapsActivity = (MapsActivity) context;
         mNavTitles = Titles;
-        mIcons = Icons;
+       // mIcons = Icons;
         name = Name;
         email = Email;
         profile = Profile;
@@ -116,7 +116,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public void onBindViewHolder(final MyAdapter.ViewHolder holder, final int position) {
         if (holder.Holderid == 1) {
             holder.textView.setText(mNavTitles[position - 1]);
-            holder.imageView.setImageResource(mIcons[position - 1]);
+            //holder.imageView.setImageResource(mIcons[position - 1]);
 
             holder.textView.setOnClickListener(new View.OnClickListener() {
                 @Override
