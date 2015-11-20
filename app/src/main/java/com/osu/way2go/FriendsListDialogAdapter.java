@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ public class FriendsListDialogAdapter extends BaseAdapter {
 
     TextView friend;
     CheckBox selectFriend;
+
+    int selectedPosition = -1;
 
     public FriendsListDialogAdapter(List<String> friends, Context context, int selectCount){
         friendsList = friends;
@@ -53,36 +56,50 @@ public class FriendsListDialogAdapter extends BaseAdapter {
 
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         if(convertView == null){
             convertView = inflater.inflate(R.layout.select_friend, null);
             friend = (TextView)convertView.findViewById(R.id.friend);
+            selectFriend = (CheckBox) convertView.findViewById(R.id.selectFriend);
             final String a = friendsList.get(position);
             friend.setText(a);
 
-            friend.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.i(TAG, "adding " + a);
-                    if(selectCount != 1)
-                        selectedFriendsList.add(a);
-                    else
-                        selectedFriend = a;
+            if(position==selectedPosition){
+                selectFriend.setChecked(true);
+            }else{
+                selectFriend.setChecked(false);
+            }
+            selectFriend.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    Log.i(TAG, "onCheckedChanged");
+                    if(selectCount != 1){
+                        if (isChecked) {
+                            Log.i(TAG, "adding " + a + " to sfl in oncheck changed");
+                            selectedFriendsList.add(a);
+                        } else {
+                            selectedFriendsList.remove(a);
+                            Log.i(TAG, "removing");
+                        }
+                    }else{
+                        if (isChecked) {
+                            Log.i(TAG, "adding " + a + " to sfl in oncheck changed");
+                            selectedFriend = a;
+                            selectedPosition = position;
+                        } else {
+                            selectedPosition = -1;
+                            Log.i(TAG, "removing");
+                        }
+                        notifyDataSetChanged();
+                    }
+
                 }
             });
 
-            selectFriend = (CheckBox) convertView.findViewById(R.id.selectFriend);
-            selectFriend.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if (selectFriend.isChecked()) {
-                        String s = friend.getText().toString();
-                        Log.i(TAG, "adding " + s + " to sfl in oncheck changed");
-                        selectedFriendsList.add(s);
-                    }
-                }
-            });
-            selectFriend.setOnClickListener(new View.OnClickListener() {
+
+
+
+            /*selectFriend.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (selectFriend.isChecked()) {
@@ -91,7 +108,7 @@ public class FriendsListDialogAdapter extends BaseAdapter {
                         selectedFriendsList.add(s);
                     }
                 }
-            });
+            });*/
         }
 
         return convertView;
@@ -108,10 +125,5 @@ public class FriendsListDialogAdapter extends BaseAdapter {
         return this.selectedFriend;
     }
 
-    public void onCheckBoxClicked(View v){
-        CheckBox checkBox = (CheckBox)v;
-        if(checkBox.isChecked()){
-            Log.i(TAG,"clicked the check box");
-        }
-    }
+
 }

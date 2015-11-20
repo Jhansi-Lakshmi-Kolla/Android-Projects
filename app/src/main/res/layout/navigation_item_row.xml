@@ -37,7 +37,7 @@
         android:id="@+id/expandableList"
         android:layout_below="@id/rowText"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:visibility="gone">
 
     </ListView>

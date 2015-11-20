@@ -1,5 +1,6 @@
 package com.osu.way2go;
 
+import android.content.Intent;
 import android.util.Log;
 
 import com.parse.ParseException;
@@ -23,6 +24,11 @@ public class ParseUtility {
         currentUser = ParseUser.getCurrentUser();
     }
 
+    public static void logout(){
+        ParseUser.logOut();
+
+    }
+
     public static String getUserName(){
         return currentUser.get("FName").toString()+ " " + currentUser.get("LName").toString();
     }
@@ -41,8 +47,19 @@ public class ParseUtility {
         for(ParseObject o : li){
             invites.addAll(o.getList("Invites"));
         }
-
-
+        //xxx
+        ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
+        pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
+        try {
+            List<ParseObject> results = pq.find();
+            for(ParseObject p : results){
+                invites.removeAll(p.getList("Blocked"));
+                //p.save();
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        //xxx
         for(Object oo : invites)
             invitesNames.add(oo.toString());
         return invitesNames;
@@ -61,6 +78,22 @@ public class ParseUtility {
                 allusers.add(p.getUsername());
             }
         }
+        //xxx
+        ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
+        pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
+        try {
+            List<ParseObject> results = pq.find();
+            for(ParseObject p : results){
+                allusers.removeAll(p.getList("Blocked"));
+                allusers.removeAll(p.getList("Friends"));
+                //p.save();
+            }
+//            for(String sam : allusers)
+//                Log.i(TAG, "sam is "+sam);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        //xxx
         return allusers;
     }
 
@@ -88,13 +121,18 @@ public class ParseUtility {
         q.whereEqualTo("Username", currentUser.getUsername());
         List<ParseObject> li = q.find();
         //invites.addAll(li.get(0).getString("Invites"));
-        for(ParseObject o : li){
-            blockedList.addAll(o.getList("Blocked"));
+        //yyy
+        List<String> b = null;
+        for (ParseObject o : li) {
+            //blockedList.addAll(o.getList("Blocked"));
+            b = o.getList("Blocked");
         }
-
-
-        for(Object oo : blockedList)
-            blockedNames.add(oo.toString());
+        for (String temp : b) {
+            Log.i(TAG, "Adding yyy "+temp);
+            blockedNames.add(temp);
+        }
+//        for (Object oo : blockedList)
+//            blockedNames.add(oo.toString());
         return blockedNames;
     }
     public static List<String> getDirectedList(){
@@ -119,10 +157,23 @@ public class ParseUtility {
                 e.printStackTrace();
             }
         }
-
-
     }
-
+    public static void putBlocked(List<String> blocked){
+        ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
+        pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
+        try {
+            List<ParseObject> results = pq.find();
+            for(ParseObject p : results){
+                Log.i(TAG, "zzz  " + p.getString("Username"));
+                for(String temp : blocked) {
+                    p.addUnique("Blocked", temp);
+                }
+                p.save();
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
     public static void putInFriendsList(String inviter){
         ParseQuery<ParseObject> pq = ParseQuery.getQuery("Invite");
         pq.whereEqualTo("Username", ParseUser.getCurrentUser().getUsername());
@@ -192,7 +243,7 @@ public class ParseUtility {
     }
 
     public static String getPassword(String emailIDEntered) throws ParseException {
-       String password = "";
+        String password = "";
         ParseQuery<ParseObject> q = ParseQuery.getQuery("Invite");
         q.whereEqualTo("Username", emailIDEntered);
         List<ParseObject> li = q.find();

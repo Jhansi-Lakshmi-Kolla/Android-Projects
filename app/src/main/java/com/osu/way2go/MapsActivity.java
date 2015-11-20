@@ -1,7 +1,10 @@
 package com.osu.way2go;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -10,6 +13,7 @@ import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -32,7 +36,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.parse.ParseException;
@@ -40,6 +46,7 @@ import com.parse.ParseException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,21 +58,32 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Context mContext;
     LatLng curlocation;
 
+    //for remote direction
+    boolean isBeingDirected;
+    String directedBy;
+
+    boolean isDirecting;
+
+    Marker previousRemoteLocationMarker;
+    LatLng previousRemoteMarkerLatLng;
+
+    Marker myCurrentLocation;
+
     //Parse details
 
 
     //Constants
     private static final int DEFAULT_STATE = 0;
     private static final int ADD_MARKERS_STATE = 1;
-    private static final int DRAW_PATH_STATE = 2;
+    //private static final int DRAW_PATH_STATE = 2;
 
     private String currentConnectedFriend = null;
 
     private int CUR_STATE = DEFAULT_STATE;
 
     //Navigation drawer contents
-    String TITLES[] = {"Invite Friends","Invites","Connected","Blocked","Settings"};
-    int ICONS[] = {android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star};
+    String TITLES[] = {"Invite Friends","Invites","Connected","Block Users","Blocked","Logout"};
+    int ICONS[] = {android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star};
     private String NAME;
     private String EMAIL;
     int PROFILE = R.drawable.jhansi;
@@ -134,11 +152,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.i(TAG, "onLocationChanged");
             curlocation = new LatLng(location.getLatitude(), location.getLongitude());
             //LatLng otherlocation = new LatLng(location.getLatitude()+100, location.getLongitude()+100);
-            mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(curlocation).title("Marker in current location"));
+            if(myCurrentLocation != null){
+                myCurrentLocation.remove();
+            }
+            if(!isDirecting)
+                myCurrentLocation = mMap.addMarker(new MarkerOptions().position(curlocation).title("Marker in current location"));
             //addLines(new LatLng(40.722543, -73.998585), new LatLng(40.7577, -73.9857));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curlocation, 13));
-           // sendLocation(curlocation.latitude, curlocation.longitude);
+            if(isBeingDirected && directedBy != null){
+                sendLocation(curlocation.latitude, curlocation.longitude, directedBy, Constants.TYPE_LOCATION);
+            }
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -171,8 +194,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         ReadTask downloadTask = new ReadTask(mContext);
                         downloadTask.execute(url);
                     }
-                    if(currentConnectedFriend != null){
-                        sendLocation(latLng.latitude, latLng.longitude);
+                    if (currentConnectedFriend != null) {
+                        sendLocation(latLng.latitude, latLng.longitude, currentConnectedFriend, Constants.TYPE_MARKER);
                     }
 
                 }
@@ -190,26 +213,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch (state){
             case DEFAULT_STATE:
                 showSelectfriendDialog();
-                if(currentConnectedFriend != null){
-                    receiveSelectFriendLocation(currentConnectedFriend);
-                    fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_menu_share));
-                }
-
                 CUR_STATE = ADD_MARKERS_STATE;
                 break;
-           /* case ADD_MARKERS_STATE:
-                CUR_STATE = DRAW_PATH_STATE;
-                break;*/
-            case DRAW_PATH_STATE:
+            case ADD_MARKERS_STATE:
+                /*CUR_STATE = DRAW_PATH_STATE;
+                break;
+            case DRAW_PATH_STATE:*/
                 pathMarkers.clear();
                 mMap.clear();
-                fab.setImageDrawable(getResources().getDrawable(android.R.drawable.ic_input_add));
+                fab.setImageDrawable(ContextCompat.getDrawable(mContext, android.R.drawable.ic_input_add));
+                isDirecting = false;
+                previousRemoteLocationMarker = null;
+                previousRemoteMarkerLatLng = null;
+                sendStopDirectRequest(currentConnectedFriend);
                 currentConnectedFriend = null;
                 CUR_STATE = DEFAULT_STATE;
                 break;
         }
         Log.i(TAG, "Current state is " + CUR_STATE);
     }
+
+
+
 
     public void showSelectfriendDialog(){
         final Dialog selectFriendsDialog = new Dialog((mContext));
@@ -237,6 +262,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
            @Override
            public void onClick(View v) {
                currentConnectedFriend = selectFriendAdapter.getSelectedFriend();
+               if(currentConnectedFriend != null){
+                   Log.i(TAG, "selected " + currentConnectedFriend + " so sending direction request to him");
+                   sendDirectRequest(currentConnectedFriend);
+                   fab.setImageDrawable(ContextCompat.getDrawable(mContext,R.drawable.ic_menu_share));
+               }else{
+                   Log.i(TAG, "didn't select any friend to direct");
+               }
                selectFriendsDialog.dismiss();
            }
        });
@@ -244,11 +276,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         selectFriendsDialog.show();
     }
 
-    public void receiveSelectFriendLocation(String receiverName){
-        if(mMap != null){
-
-        }
-    }
 
    /* private void addLines(List<LatLng> markers) {
 
@@ -294,11 +321,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void addPolyLineOptions(PolylineOptions options){
         if(mMap != null && options != null){
             mMap.addPolyline(options);
+            /*if(isDirecting && directingWhom != null){
+                sendDirections(options, directingWhom);
+            }*/
         }else{
-            Log.e(TAG,"mMap is null");
+            Log.e(TAG, "mMap is null");
         }
     }
-
 
 
 
@@ -349,30 +378,168 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mSocket.connect();
             mSocket.emit(Constants.EVENT_REGISTER, ParseUtility.getUserEmail());
 
-            mSocket.on(Constants.EVENT_RECEIVE_LOCATION, new Emitter.Listener() {
+            mSocket.on(Constants.EVENT_DIRECT_CONFIRMATION, new Emitter.Listener() {
                 @Override
                 public void call(Object... args) {
-                    Log.i(TAG, "received location " + args[0]);
-                    String[] positions = String.valueOf(args[0]).split(",");
-                    double latitude = Double.valueOf(positions[0]);
-                    double longitude = Double.valueOf(positions[1]);
-                    final LatLng remotePosition = new LatLng(latitude, longitude);
-                    final Object[] random = args;
+                    final WeakReference<MapsActivity> mapsActivityWeakReference = new WeakReference<MapsActivity>((MapsActivity) mContext);
+                    Log.i(TAG, "received direct request confirmation " + args[0]);
+                    JSONObject obj = (JSONObject) args[0];
+                    String from = null;
+                    try {
+                        from = obj.getString("from");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    final String who = from;
                     runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
-                            Toast.makeText(mContext, "recieved another location ; " + random[0], Toast.LENGTH_SHORT).show();
-                            if(mMap != null){
-                                mMap.clear();
-                                mMap.addMarker(new MarkerOptions().position(remotePosition).title("Marker in remote location"));
-                                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(remotePosition, 13));
+                            if (mapsActivityWeakReference.get() != null && !mapsActivityWeakReference.get().isFinishing()) {
+                                AlertDialog alertDialog = new AlertDialog.Builder(mContext).create();
+                                alertDialog.setTitle("Confirm?");
+                                alertDialog.setMessage("Do you want to receive directions from " + who + "?");
+                                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Yes",
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                                fab.setVisibility(View.INVISIBLE);
+                                                isBeingDirected = true;
+                                                directedBy = who;
+                                                if (curlocation != null)
+                                                    sendLocation(curlocation.latitude, curlocation.longitude, who, Constants.TYPE_LOCATION);
+                                                else
+                                                    Toast.makeText(mContext, "u urself dont have ur loaction :D", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "NO",
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                                isBeingDirected = false;
+                                                directedBy = null;
+                                            }
+                                        });
+                                alertDialog.show();
+
                             }
+
                         }
                     });
 
                 }
             });
+
+            mSocket.on(Constants.EVENT_DIRECT_STOP, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    final WeakReference<MapsActivity> mapsActivityWeakReference = new WeakReference<MapsActivity>((MapsActivity)mContext);
+                    Log.i(TAG, "received direct request confirmation " + args[0]);
+                    JSONObject obj = (JSONObject) args[0];
+                    String from = null;
+                    try {
+                        from = obj.getString("from");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    final String who = from;
+                    isBeingDirected = false;
+                    directedBy = null;
+                    runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            if(mapsActivityWeakReference.get() != null && !mapsActivityWeakReference.get().isFinishing()){
+                                mMap.clear();
+                                fab.setVisibility(View.VISIBLE);
+                            }
+
+
+                        }
+                    });
+
+                }
+            });
+
+            mSocket.on(Constants.EVENT_RECEIVE_LOCATION, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                   // Log.i(TAG,"received marker location");
+                    try {
+                        JSONObject obj = (JSONObject) args[0];
+                        double latitude = Double.valueOf(obj.getString("latitude"));
+                        double longitude = Double.valueOf(obj.getString("longitude"));
+                        final String type = obj.getString("type");
+
+                        final LatLng remotePosition = new LatLng(latitude, longitude);
+                        final double lat = latitude;
+                        final double longi = longitude;
+
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //Toast.makeText(mContext, "recieved another location ; " + lat + ", " + longi + " from ", Toast.LENGTH_SHORT).show();
+                                if (mMap != null) {
+
+                                    if (type.equals(Constants.TYPE_LOCATION)) {
+                                        Log.i(TAG,"location marker received");
+                                        if (previousRemoteLocationMarker != null) {
+                                            previousRemoteLocationMarker.remove();
+                                        }
+                                        if(myCurrentLocation != null){
+                                            myCurrentLocation.remove();
+                                        }
+
+                                        MarkerOptions options = new MarkerOptions().position(remotePosition);
+                                        options.title("Remote object location");
+                                        options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                                        previousRemoteLocationMarker = mMap.addMarker(options);
+                                    } else if (type.equals(Constants.TYPE_MARKER)) {
+                                        Log.i(TAG, "new marker position received");
+                                        if (previousRemoteMarkerLatLng != null) {
+                                            String url = getMapsApiDirectionsUrl(previousRemoteMarkerLatLng, remotePosition);
+                                            ReadTask downloadTask = new ReadTask(mContext);
+                                            downloadTask.execute(url);
+                                        }else if(previousRemoteLocationMarker != null){
+                                            String url = getMapsApiDirectionsUrl(previousRemoteLocationMarker.getPosition(), remotePosition);
+                                            ReadTask downloadTask = new ReadTask(mContext);
+                                            downloadTask.execute(url);
+                                        }
+                                        previousRemoteMarkerLatLng = remotePosition;
+                                    }
+                                   // mMap.clear();
+                                   // mMap.addMarker(new MarkerOptions().position(remotePosition).title("Marker in remote location"));
+                                   // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(remotePosition, 13));
+                                    isDirecting = true;
+                                }
+                            }
+                        });
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            });
+
+            /*mSocket.on(Constants.EVENT_RECEIVE_DIRECTION, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    JSONObject obj = (JSONObject) args[0];
+                    PolylineOptions options = obj.get
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(mMap != null){
+                                mMap.addPolyline()
+                            }
+                        }
+                    });
+                }
+            });*/
 
             mSocket.on(Constants.MESSAGE, new Emitter.Listener() {
                 @Override
@@ -396,15 +563,52 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    /*private void sendDirections(PolylineOptions options, String directingWhom) {
+        JSONObject obj = new JSONObject();
+        try{
+            obj.put("directions", options);
+            obj.put("from", ParseUtility.getUserEmail());
+            obj.put("to", directingWhom);
+            mSocket.emit(Constants.EVENT_SEND_DIRECTION,obj);
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }*/
+
+    private void sendStopDirectRequest(String currentConnectedFriend) {
+        JSONObject obj = new JSONObject();
+        Log.i(TAG, "sending stop request");
+        try {
+            obj.put("from", ParseUtility.getUserEmail());
+            obj.put("to", currentConnectedFriend);
+            mSocket.emit(Constants.EVENT_DIRECT_STOP, obj);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendDirectRequest(String currentConnectedFriend) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("from", ParseUtility.getUserEmail());
+            obj.put("to", currentConnectedFriend);
+            mSocket.emit(Constants.EVENT_DIRECT_CONFIRMATION, obj);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 
-    public void sendLocation(double latitude, double longitude){
+
+    public void sendLocation(double latitude, double longitude, String receiver, String type){
        // double[] location = {latitude, longitude};
         JSONObject obj = new JSONObject();
         try {
-            obj.put("receiver",currentConnectedFriend);
+            obj.put("receiver",receiver);
             obj.put("latitude", latitude);
             obj.put("longitude", longitude);
+            obj.put("type", type);
             mSocket.emit(Constants.EVENT_SEND_LOCATION, obj);
         } catch (JSONException e) {
             e.printStackTrace();
