@@ -5,7 +5,6 @@
 
     <string name="username">username@xyz.com</string>
     <string name="password">password</string>
-    <string name="login">Login</string>
     <string name="no_account">Don\'t have an account?</string>
     <string name="signup">Sign Up</string>
     <string name="forgot">Forgot Password</string>

@@ -86,7 +86,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     int ICONS[] = {android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star,android.R.drawable.btn_star};
     private String NAME;
     private String EMAIL;
-    int PROFILE = R.drawable.jhansi;
+    int PROFILE = R.drawable.way2go;
 
     //Path direct contents
     List<LatLng> pathMarkers;

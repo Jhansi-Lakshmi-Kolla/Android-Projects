@@ -34,7 +34,7 @@
         android:layout_below="@id/password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/login"/>
+        android:text="Login"/>
     <TextView
         android:id="@+id/noaccount"
         android:layout_below="@id/loginButton"
@@ -65,7 +65,7 @@
         android:layout_marginTop="@dimen/forgot_password_marginTop"
         android:autoLink="web"/>
 
-    <Button
+   <!-- <Button
         android:id="@+id/connect"
         android:layout_below="@id/forgotPassword"
         android:layout_width="match_parent"
@@ -77,7 +77,7 @@
         android:layout_below="@id/connect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-
+-->
 
 </RelativeLayout>
 

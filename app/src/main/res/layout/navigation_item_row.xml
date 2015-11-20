@@ -25,13 +25,13 @@
         android:text="Medium Text"
         android:id="@+id/rowText" />
 
-    <ImageView
+    <!--<ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/expand"
         android:layout_alignParentRight="true"
         android:paddingLeft="16dp"
-        android:src="@drawable/ic_media_play"/>
+        android:src="@drawable/ic_media_play"/>-->
 
     <ListView
         android:id="@+id/expandableList"
