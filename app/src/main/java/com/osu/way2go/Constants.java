@@ -4,7 +4,8 @@ package com.osu.way2go;
  * Created by jhansi_lak on 11/18/2015.
  */
 public class Constants {
-    public static final String SERVER_URL = "http://192.168.2.7:8800";
+    public static final String SERVER_URL = "http://192.168.43.244:8800"; //my home
+    //public static final String SERVER_URL = "http://164.107.229.41:8800"; //my home
     //public static final String SERVER_URL = "http://140.254.124.73:8080";
    //public static final String SERVER_URL = "http://192.168.0.14:8080";
     public static final String EVENT_REGISTER = "register";

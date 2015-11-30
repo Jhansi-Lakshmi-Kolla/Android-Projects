@@ -109,9 +109,9 @@ public class LoginActivity extends AppCompatActivity {
                         // do stuff with the user
                         Log.i(TAG, "Friends");
                         List<String> f = currentUser.getList("Friends");
-                        for (String model : f) {
+                        /*for (String model : f) {
                             Log.i(TAG, model);
-                        }
+                        }*/
                         Log.i(TAG, "Users");
                         ParseQuery<ParseUser> query = ParseUser.getQuery();
                         //query.whereEqualTo("gender", "female");
